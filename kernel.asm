@@ -2,8 +2,8 @@ org 0x7e00
 jmp 0x0000:start
 
 data:
-    Lose db 'PERDEU', 0x00
-    Win db 'GANHOU', 0x00
+    Lose db 'Voce perdeu, Tente outra vez!', 0x00
+    Win db 'Voce ganhou, Parabéns!', 0x00
 
 	VID equ 0B800h
     Colunas equ 80 ; largura
@@ -46,6 +46,22 @@ start:
     xor ax, ax
     mov ds, ax
     mov es, ax
+
+    mov bl, 15
+    mov al, 10h
+    int 10h
+  	call PRINT_LOGO
+
+    mov ah, 2
+    mov bh, 0
+    mov dh, 14
+    mov dl, 17
+   	int 10h
+
+    mov si, welcome
+    call PRINT
+
+    call READ
 
     ;; INICIO
     mov ax, 0003h ; Modo de video VGA 03h (80x25, 16 cores, modo de texto)
@@ -274,3 +290,90 @@ start:
         int 16h
         int 19h
 jmp $
+
+PRINT_COLOR:
+    lodsb
+    cmp al, 0
+    je .done
+
+    mov ah, 0xe
+    mov bl, 2
+    int 10h
+
+    jmp PRINT_COLOR
+
+    .done:
+        ret
+PRINT:
+    lodsb
+    cmp al, 0
+    je .done
+
+    mov ah, 0xe
+    mov bl, 15
+    int 10h
+
+    jmp PRINT
+    .done:
+        ret
+
+
+var:
+    menos db '-', 0
+    welcome db ' Seja bem vindo, pressione ENTER para comecar a jogar ', 0
+    line1  db  ' ----------------------------- SNAKE -------------------------------',0
+    line2  db  ' Teclas : W, A, S, D', 0
+PRINT_LOGO:
+ 	mov ah, 2
+    mov bh, 0
+    mov dh, 2
+    mov dl, 7
+   	int 10h
+
+	mov si, line1
+	call PRINT_COLOR
+
+	mov ah, 2
+    mov bh, 0
+    mov dh, 3
+    mov dl, 7
+   	int 10h
+    
+    mov si, line2
+	call PRINT_COLOR
+
+	mov ah, 2
+    mov bh, 0
+    mov dh, 3
+    mov dl, 7
+   	int 10h
+
+	ret
+
+end:
+    jmp $
+
+READ:
+    xor cx, cx
+    mov bl, 15
+
+    .for1:
+        mov ah, 0
+        int 16h
+        
+        je .end
+        cmp al, 0x08
+      
+        mov ah, 0x0e
+        
+        stosb
+        jmp .for1
+    .end:
+        mov al, 0
+        stosb
+
+        mov ah, 0x0e
+        mov al, 10
+        
+
+        ret
